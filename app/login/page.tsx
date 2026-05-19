@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Zap, CheckCircle, TrendingUp, Shield } from "lucide-react";
+import Image from "next/image";
+import { CheckCircle, TrendingUp, Shield } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
@@ -40,12 +41,14 @@ export default function LoginPage() {
     <div className="flex h-screen">
       {/* Left panel */}
       <div className="hidden lg:flex w-2/5 bg-slate-900 flex-col justify-between p-10">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-white font-bold text-xl">Patentos</span>
-        </div>
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/PatentOs.png"
+            alt="Patentos Logo"
+            width={96}
+            height={96}
+          />
+        </Link>
         <div>
           <h2 className="text-white text-3xl font-bold leading-tight mb-4">
             Run your business<br />smarter with AI
@@ -74,12 +77,14 @@ export default function LoginPage() {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center bg-white px-6">
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-lg">Patentos</span>
-          </div>
+          <Link href="/" className="lg:hidden flex items-center gap-2 mb-8">
+            <Image
+              src="/PatentOs.png"
+              alt="Patentos Logo"
+              width={32}
+              height={32}
+            />
+          </Link>
 
           <h1 className="text-2xl font-bold text-slate-900 mb-1">Welcome back</h1>
           <p className="text-slate-500 text-sm mb-8">Sign in to your Patentos account</p>
@@ -128,7 +133,6 @@ export default function LoginPage() {
             onClick={handleDemoLogin}
             className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
           >
-            <Zap className="w-4 h-4 text-indigo-500" />
             Quick Demo Login
           </button>
 

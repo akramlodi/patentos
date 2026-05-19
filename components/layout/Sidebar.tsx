@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Receipt, Package, CreditCard, BarChart2,
-  Sparkles, Lightbulb, Users, Settings, Zap, LogOut,
+  Sparkles, Lightbulb, Users, Settings, LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -82,16 +83,17 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               size="lg"
-              className="hover:bg-transparent data-active:bg-transparent"
+              className="hover:bg-transparent data-active:bg-transparent justify-center"
               tooltip="Patentos"
             >
-              <Link href="/dashboard" className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0">
-                  <Zap className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-sidebar-accent-foreground font-bold text-base tracking-tight">
-                  Patentos
-                </span>
+              <Link href="/dashboard" className="flex items-center justify-center">
+                <Image
+                  src="/PatentOs.png"
+                  alt="Patentos Logo"
+                  width={96}
+                  height={96}
+                  className="shrink-0"
+                />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

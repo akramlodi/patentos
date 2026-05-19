@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
-  Zap, Receipt, Package, Sparkles, BarChart2, CreditCard, Lightbulb,
+  Receipt, Package, Sparkles, BarChart2, CreditCard, Lightbulb,
   CheckCircle,
 } from "lucide-react";
 
@@ -24,12 +25,14 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-4 border-b border-slate-100 sticky top-0 bg-white/95 backdrop-blur-sm z-30">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-lg text-slate-900">Patentos</span>
-        </div>
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/PatentOs.png"
+            alt="Patentos Logo"
+            width={92}
+            height={92}
+          />
+        </Link>
         <div className="flex items-center gap-3">
           <Link
             href="/login"
@@ -203,11 +206,13 @@ export default function LandingPage() {
       <footer className="px-8 py-8 border-t border-slate-100">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-bold text-slate-900">Patentos</span>
-            <span className="text-slate-400 text-sm ml-2">Built for Indian MSMEs</span>
+            <Image
+              src="/PatentOs.png"
+              alt="Patentos Logo"
+              width={28}
+              height={28}
+            />
+            <span className="text-slate-400 text-sm">Built for Indian MSMEs</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-slate-500">
             <Link href="/login" className="hover:text-slate-700">Login</Link>
