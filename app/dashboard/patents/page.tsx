@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Plus, X, Lightbulb, Search, FileText, Send } from "lucide-react";
+import Link from "next/link";
+import { Plus, X, Lightbulb, Search, FileText, Send, ArrowRight, Sparkles } from "lucide-react";
 import { samplePatents } from "@/lib/data";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatDate } from "@/lib/utils";
@@ -68,16 +69,24 @@ export default function PatentsPage() {
 
       {/* AI Banner */}
       <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-indigo-800 text-sm">
-        <div className="flex items-start gap-3">
-          <div className="text-lg">🤖</div>
-          <div>
+        <div className="flex items-start gap-4">
+          <div className="text-xl shrink-0">🤖</div>
+          <div className="flex-1">
             <p className="font-semibold mb-1">AI Suggestion</p>
             <p className="leading-relaxed">
               Based on current market trends, AI-based billing automation and vernacular voice assistants are
-              gaining strong traction in MSME tech. Your "AI Billing Bot" idea aligns with emerging patent filings.
-              Consider a prior art search before drafting.
+              gaining strong traction in MSME tech. Your &quot;AI Billing Bot&quot; idea aligns with emerging patent filings.
+              Run a full prior art search before drafting.
             </p>
           </div>
+          <Link
+            href="/dashboard/patents/process"
+            className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors shrink-0 whitespace-nowrap"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Start Filing Process
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
 
