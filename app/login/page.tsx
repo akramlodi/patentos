@@ -74,7 +74,7 @@ export default function LoginPage() {
         <p className="text-slate-600 text-xs">© 2024 Patentos. Built for Indian MSMEs.</p>
       </div>
 
-      {/* Right panel */}
+      {/* Right panel*/}
       <div className="flex-1 flex items-center justify-center bg-white px-6">
         <div className="w-full max-w-md">
           <Link href="/" className="lg:hidden flex items-center gap-2 mb-8">
