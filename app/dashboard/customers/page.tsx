@@ -135,13 +135,13 @@ export default function CustomersPage() {
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
         <p className="text-lg font-semibold text-slate-900 mb-1">Revenue by Customer</p>
         <p className="text-sm text-slate-500 mb-4">Total spend — all time</p>
-        <ChartContainer config={customerChartConfig} className="h-52">
+        <ChartContainer config={customerChartConfig} className="h-56">
           <BarChart
             data={sampleCustomerRevenue}
             layout="vertical"
-            margin={{ top: 0, right: 24, left: 4, bottom: 0 }}
+            margin={{ top: 0, right: 72, left: 4, bottom: 0 }}
           >
-            <XAxis type="number" hide />
+            <XAxis type="number" hide domain={[0, "dataMax"]} />
             <YAxis
               type="category"
               dataKey="name"
@@ -161,7 +161,12 @@ export default function CustomersPage() {
                 );
               }}
             />
-            <Bar dataKey="revenue" radius={[0, 4, 4, 0]} maxBarSize={22}>
+            <Bar
+              dataKey="revenue"
+              radius={[0, 4, 4, 0]}
+              maxBarSize={22}
+              label={{ position: "right", fontSize: 11, fill: "#64748b", formatter: (v: unknown) => `₹${(Number(v) / 1000).toFixed(0)}k` }}
+            >
               {sampleCustomerRevenue.map((_, i) => (
                 <Cell
                   key={i}

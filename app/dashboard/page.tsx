@@ -39,6 +39,9 @@ const lowStockItems = [
 export default function DashboardPage() {
   const router = useRouter();
   const recentInvoices = sampleInvoices.slice(0, 5);
+  const weekTotal = sampleAnalytics.weeklyRevenue.reduce((s, d) => s + d.revenue, 0);
+  const bestDay = sampleAnalytics.weeklyRevenue.reduce((best, d) => d.revenue > best.revenue ? d : best);
+  const avgDaily = Math.round(weekTotal / sampleAnalytics.weeklyRevenue.length);
 
   return (
     <div className="space-y-6">
@@ -110,13 +113,27 @@ export default function DashboardPage() {
             <p className="text-sm text-slate-500">Daily earnings overview</p>
           </div>
           <ChartContainer config={weeklyChartConfig} className="h-50">
-            <BarChart data={sampleAnalytics.weeklyRevenue} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} />
+            <BarChart data={sampleAnalytics.weeklyRevenue} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} padding={{ left: 16, right: 16 }} />
               <YAxis hide />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ChartContainer>
+          <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100">
+            <div className="text-center">
+              <p className="text-xs text-slate-400 mb-0.5">Weekly Total</p>
+              <p className="text-sm font-semibold text-slate-900">{formatINR(weekTotal)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-400 mb-0.5">Best Day</p>
+              <p className="text-sm font-semibold text-slate-900">{bestDay.day} · {formatINR(bestDay.revenue)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-400 mb-0.5">Daily Avg</p>
+              <p className="text-sm font-semibold text-slate-900">{formatINR(avgDaily)}</p>
+            </div>
+          </div>
         </div>
 
         {/* Revenue vs target area chart */}

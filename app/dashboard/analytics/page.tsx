@@ -288,14 +288,16 @@ export default function AnalyticsPage() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
           <p className="text-lg font-semibold text-slate-900 mb-1">Last 14 Days</p>
           <p className="text-sm text-slate-500 mb-4">Daily sales trend</p>
-          <ChartContainer config={sparklineConfig} className="h-24">
-            <AreaChart data={sparklineData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <ChartContainer config={sparklineConfig} className="h-40">
+            <AreaChart data={sparklineData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="var(--color-v)" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="var(--color-v)" stopOpacity={0} />
                 </linearGradient>
               </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} interval={6} padding={{ left: 0, right: 0 }} />
               <Area type="monotone" dataKey="v" stroke="var(--color-v)" fill="url(#sparkGrad)" strokeWidth={2} dot={false} />
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
             </AreaChart>
@@ -305,18 +307,20 @@ export default function AnalyticsPage() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
           <p className="text-lg font-semibold text-slate-900 mb-1">Revenue vs Target</p>
           <p className="text-sm text-slate-500 mb-4">Monthly performance vs goal</p>
-          <ChartContainer config={growthConfig} className="h-24">
-            <AreaChart data={sampleMonthlyGrowth} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <ChartContainer config={growthConfig} className="h-40">
+            <AreaChart data={sampleMonthlyGrowth} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="analyticsRevGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.25} />
                   <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} padding={{ left: 0, right: 0 }} />
               <Area type="monotone" dataKey="revenue" stroke="var(--color-revenue)" fill="url(#analyticsRevGrad)" strokeWidth={2} dot={false} />
               <Area type="monotone" dataKey="target" stroke="var(--color-target)" fill="none" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
             </AreaChart>
           </ChartContainer>
         </div>

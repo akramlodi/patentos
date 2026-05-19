@@ -26,8 +26,11 @@ const stageColors: Record<PatentStatus, string> = {
 
 export default function PatentsPage() {
   const [patents, setPatents] = useState<Patent[]>(samplePatents);
+  const [activeFilter, setActiveFilter] = useState<PatentStatus | "all">("all");
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", status: "idea" as PatentStatus, tags: "" });
+
+  const displayPatents = activeFilter === "all" ? patents : patents.filter((p) => p.status === activeFilter);
 
   const updateStatus = (id: number, status: string) => {
     setPatents(patents.map((p) => p.id === id ? { ...p, status } : p));
@@ -91,27 +94,49 @@ export default function PatentsPage() {
       </div>
 
       {/* Status pipeline */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
+        <button
+          onClick={() => setActiveFilter("all")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            activeFilter === "all"
+              ? "bg-slate-800 text-white"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          <span>All</span>
+          <span className="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center text-xs font-bold">
+            {patents.length}
+          </span>
+        </button>
         {stages.map(({ status, label, icon }) => {
           const count = patents.filter((p) => p.status === status).length;
+          const isActive = activeFilter === status;
           return (
-            <div
+            <button
               key={status}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${stageColors[status]}`}
+              onClick={() => setActiveFilter(status)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${stageColors[status]} ${
+                isActive ? "ring-2 ring-offset-1 ring-current" : "hover:opacity-80"
+              }`}
             >
               <span>{icon}</span>
               <span>{label}</span>
               <span className="w-5 h-5 rounded-full bg-white/60 flex items-center justify-center text-xs font-bold">
                 {count}
               </span>
-            </div>
+            </button>
           );
         })}
       </div>
 
       {/* Patent cards grid */}
       <div className="grid grid-cols-3 gap-4">
-        {patents.map((p) => (
+        {displayPatents.length === 0 && (
+          <div className="col-span-3 text-center py-12 text-slate-400 bg-white rounded-xl border border-slate-100">
+            No patents in this stage yet.
+          </div>
+        )}
+        {displayPatents.map((p) => (
           <div key={p.id} className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex flex-col">
             <div className="flex items-start justify-between mb-3">
               <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">

@@ -164,7 +164,7 @@ export default function PaymentsPage() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} padding={{ left: 0, right: 0 }} />
               <ChartTooltip content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null;
                 return (
