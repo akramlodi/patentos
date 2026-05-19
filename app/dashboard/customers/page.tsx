@@ -1,12 +1,26 @@
 "use client";
 import { useState } from "react";
 import { Plus, ChevronDown, ChevronUp, X } from "lucide-react";
-import { sampleCustomers, sampleInvoices } from "@/lib/data";
+import { BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
+import {
+  ChartContainer, ChartTooltip,
+} from "@/components/ui/chart";
+import type { ChartConfig } from "@/components/ui/chart";
+import { sampleCustomers, sampleInvoices, sampleCustomerRevenue } from "@/lib/data";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatINR, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Card, CardHeader, CardFooter, CardTitle, CardDescription, CardAction,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp } from "lucide-react";
 
 type Customer = typeof sampleCustomers[0];
+
+const customerChartConfig = {
+  revenue: { label: "Revenue", color: "#6366F1" },
+} satisfies ChartConfig;
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>(
@@ -67,18 +81,96 @@ export default function CustomersPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: "Total Customers", value: String(totals.total) },
-          { label: "Top Customer", value: totals.topCustomer },
-          { label: "Total Revenue", value: formatINR(totals.totalRevenue) },
-          { label: "Avg. Spend", value: formatINR(totals.avgSpend) },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
-            <p className="text-sm text-slate-500 mb-1">{label}</p>
-            <p className="text-xl font-bold text-slate-900 truncate">{value}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-4 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs">
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Total Customers</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{String(totals.total)}</CardTitle>
+            <CardAction><Badge variant="outline">Active</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Your customer base</div>
+            <div className="text-muted-foreground">Building relationships</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Top Customer</CardDescription>
+            <CardTitle className="text-xl font-semibold truncate @[250px]/card:text-2xl">{totals.topCustomer}</CardTitle>
+            <CardAction><Badge variant="outline">Top spender</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Highest lifetime value</div>
+            <div className="text-muted-foreground">Ranked by total spend</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Total Revenue</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{formatINR(totals.totalRevenue)}</CardTitle>
+            <CardAction><Badge variant="outline"><TrendingUp />Revenue</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Lifetime revenue <TrendingUp className="size-4" /></div>
+            <div className="text-muted-foreground">Across all customers</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Avg. Spend</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{formatINR(totals.avgSpend)}</CardTitle>
+            <CardAction><Badge variant="outline">Per customer</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Average customer value</div>
+            <div className="text-muted-foreground">Lifetime spend per customer</div>
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* Revenue by customer chart */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <p className="text-lg font-semibold text-slate-900 mb-1">Revenue by Customer</p>
+        <p className="text-sm text-slate-500 mb-4">Total spend — all time</p>
+        <ChartContainer config={customerChartConfig} className="h-52">
+          <BarChart
+            data={sampleCustomerRevenue}
+            layout="vertical"
+            margin={{ top: 0, right: 24, left: 4, bottom: 0 }}
+          >
+            <XAxis type="number" hide />
+            <YAxis
+              type="category"
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: "#64748b" }}
+              width={110}
+            />
+            <ChartTooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                return (
+                  <div className="bg-white border border-slate-100 rounded-lg shadow-lg px-3 py-2 text-xs">
+                    <p className="font-semibold text-slate-900">{payload[0]?.payload?.name}</p>
+                    <p className="text-slate-500">{formatINR(payload[0]?.value as number)}</p>
+                  </div>
+                );
+              }}
+            />
+            <Bar dataKey="revenue" radius={[0, 4, 4, 0]} maxBarSize={22}>
+              {sampleCustomerRevenue.map((_, i) => (
+                <Cell
+                  key={i}
+                  fill={i === 0 ? "#6366F1" : i === 1 ? "#818CF8" : "#A5B4FC"}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ChartContainer>
       </div>
 
       {/* Search */}

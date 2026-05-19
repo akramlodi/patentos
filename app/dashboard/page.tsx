@@ -2,73 +2,39 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  IndianRupee, Clock, Package, Lightbulb, TrendingUp, AlertTriangle,
-  Receipt, Plus, Sparkles,
+  IndianRupee, Clock, Package, Lightbulb, AlertTriangle,
+  Receipt, Plus, Sparkles, TrendingUp, TrendingDown,
 } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  LineChart, Line, CartesianGrid,
+  Card, CardHeader, CardFooter, CardTitle, CardDescription, CardAction,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid,
 } from "recharts";
-import { sampleInvoices, sampleAnalytics } from "@/lib/data";
+import {
+  ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent,
+} from "@/components/ui/chart";
+import type { ChartConfig } from "@/components/ui/chart";
+import { sampleInvoices, sampleAnalytics, sampleMonthlyGrowth } from "@/lib/data";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatINR, formatDate } from "@/lib/utils";
 
-const statCards = [
-  {
-    label: "Total Revenue",
-    value: "₹2,84,500",
-    sub: "Total this month",
-    trend: "+12.5% ↑",
-    trendColor: "text-emerald-600",
-    icon: IndianRupee,
-    iconBg: "bg-indigo-100 text-indigo-600",
-  },
-  {
-    label: "Pending Payments",
-    value: "₹38,200",
-    sub: "Across 5 invoices",
-    trend: "2 overdue",
-    trendColor: "text-red-500",
-    icon: Clock,
-    iconBg: "bg-amber-100 text-amber-600",
-  },
-  {
-    label: "Products in Stock",
-    value: "142 items",
-    sub: "Across 10 products",
-    trend: "⚠ 3 low stock",
-    trendColor: "text-amber-600",
-    icon: Package,
-    iconBg: "bg-emerald-100 text-emerald-600",
-  },
-  {
-    label: "Patent Ideas",
-    value: "4 ideas",
-    sub: "Tracked in vault",
-    trend: "1 filed",
-    trendColor: "text-indigo-600",
-    icon: Lightbulb,
-    iconBg: "bg-purple-100 text-purple-600",
-  },
-];
+const weeklyChartConfig = {
+  revenue: { label: "Revenue", color: "#6366F1" },
+} satisfies ChartConfig;
+
+const growthChartConfig = {
+  revenue: { label: "Revenue", color: "#6366F1" },
+  target: { label: "Target", color: "#94a3b8" },
+} satisfies ChartConfig;
+
 
 const lowStockItems = [
   { name: "Samsung Charger 2A", qty: 2 },
   { name: "USB Hub 4-Port", qty: 3 },
   { name: "HDMI Cable 2m", qty: 1 },
 ];
-
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white border border-slate-100 rounded-lg shadow-lg px-3 py-2 text-sm">
-        <p className="text-slate-500 text-xs">{label}</p>
-        <p className="font-semibold text-slate-900">{formatINR(payload[0].value)}</p>
-      </div>
-    );
-  }
-  return null;
-}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -77,20 +43,62 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4">
-        {statCards.map(({ label, value, sub, trend, trendColor, icon: Icon, iconBg }) => (
-          <div key={label} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg}`}>
-                <Icon className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="text-sm text-slate-500 mb-1">{label}</p>
-            <p className="text-2xl font-bold text-slate-900 mb-1">{value}</p>
-            <p className="text-xs text-slate-400">{sub}</p>
-            <p className={`text-xs font-medium mt-2 ${trendColor}`}>{trend}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-4 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs">
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Total Revenue</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">₹2,84,500</CardTitle>
+            <CardAction>
+              <Badge variant="outline"><TrendingUp />+12.5%</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Trending up this month <TrendingUp className="size-4" /></div>
+            <div className="text-muted-foreground">Total revenue for June 2024</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Pending Payments</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">₹38,200</CardTitle>
+            <CardAction>
+              <Badge variant="outline"><Clock />2 overdue</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">2 invoices are overdue <TrendingDown className="size-4" /></div>
+            <div className="text-muted-foreground">Across 5 active invoices</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Products in Stock</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">142 items</CardTitle>
+            <CardAction>
+              <Badge variant="outline"><AlertTriangle />3 low stock</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">3 products need restocking <Package className="size-4" /></div>
+            <div className="text-muted-foreground">Across 10 product SKUs</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Patent Ideas</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">4 ideas</CardTitle>
+            <CardAction>
+              <Badge variant="outline"><Lightbulb />1 filed</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">1 idea progressed to filed <Lightbulb className="size-4" /></div>
+            <div className="text-muted-foreground">Ideas tracked in your vault</div>
+          </CardFooter>
+        </Card>
       </div>
 
       {/* Charts */}
@@ -101,32 +109,43 @@ export default function DashboardPage() {
             <p className="text-lg font-semibold text-slate-900">Revenue This Week</p>
             <p className="text-sm text-slate-500">Daily earnings overview</p>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={sampleAnalytics.weeklyRevenue}>
+          <ChartContainer config={weeklyChartConfig} className="h-50">
+            <BarChart data={sampleAnalytics.weeklyRevenue} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} />
               <YAxis hide />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="revenue" fill="#6366F1" radius={[4, 4, 0, 0]} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </div>
 
-        {/* 6-month line chart */}
+        {/* Revenue vs target area chart */}
         <div className="col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
           <div className="mb-4">
-            <p className="text-lg font-semibold text-slate-900">6-Month Overview</p>
-            <p className="text-sm text-slate-500">Revenue vs Expenses</p>
+            <p className="text-lg font-semibold text-slate-900">Revenue vs Target</p>
+            <p className="text-sm text-slate-500">6-month performance</p>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={sampleAnalytics.monthlyRevenue}>
+          <ChartContainer config={growthChartConfig} className="h-50">
+            <AreaChart data={sampleMonthlyGrowth} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="dashRevGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="dashTgtGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-target)" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="var(--color-target)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
               <YAxis hide />
-              <Tooltip formatter={(v) => formatINR(Number(v))} />
-              <Line type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="expenses" stroke="#E2E8F0" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Area type="monotone" dataKey="revenue" stroke="var(--color-revenue)" fill="url(#dashRevGrad)" strokeWidth={2} dot={false} />
+              <Area type="monotone" dataKey="target" stroke="var(--color-target)" fill="url(#dashTgtGrad)" strokeWidth={2} strokeDasharray="4 4" dot={false} />
+            </AreaChart>
+          </ChartContainer>
         </div>
       </div>
 
@@ -166,7 +185,6 @@ export default function DashboardPage() {
 
         {/* Quick actions + low stock */}
         <div className="col-span-2 space-y-4">
-          {/* Quick actions */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
             <p className="text-lg font-semibold text-slate-900 mb-3">Quick Actions</p>
             <div className="grid grid-cols-2 gap-2">
@@ -188,7 +206,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Low stock */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -198,7 +215,7 @@ export default function DashboardPage() {
               {lowStockItems.map(({ name, qty }) => (
                 <div key={name} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
                     <span className="text-sm text-slate-700">{name}</span>
                   </div>
                   <span className="text-xs font-medium text-amber-600">{qty} units</span>

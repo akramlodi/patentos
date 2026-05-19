@@ -1,12 +1,15 @@
 "use client";
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
-import { sampleProducts } from "@/lib/data";
+import { Plus, Pencil, Trash2, X, Check, TrendingUp, AlertTriangle, Package } from "lucide-react";
+import {
+  Card, CardHeader, CardFooter, CardTitle, CardDescription, CardAction,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useStore, type Product } from "@/lib/store-context";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatINR } from "@/lib/utils";
 import { toast } from "sonner";
 
-type Product = typeof sampleProducts[0];
 type StockStatus = "in-stock" | "low-stock" | "out-of-stock";
 
 function getStatus(qty: number): StockStatus {
@@ -19,7 +22,7 @@ const categories = ["All", "Mobile Accessories", "Computer Accessories", "Cables
 const statusTabs = ["All", "In Stock", "Low Stock", "Out of Stock"] as const;
 
 export default function InventoryPage() {
-  const [products, setProducts] = useState<Product[]>(sampleProducts);
+  const { products, setProducts } = useStore();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [statusTab, setStatusTab] = useState<typeof statusTabs[number]>("All");
@@ -88,18 +91,54 @@ export default function InventoryPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: "Total Products", value: String(summaryStats.total), color: "text-slate-900" },
-          { label: "Low Stock", value: String(summaryStats.lowStock), color: "text-amber-600" },
-          { label: "Out of Stock", value: String(summaryStats.outOfStock), color: "text-red-600" },
-          { label: "Total Value", value: formatINR(summaryStats.totalValue), color: "text-emerald-600" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
-            <p className="text-sm text-slate-500 mb-1">{label}</p>
-            <p className={`text-xl font-bold ${color}`}>{value}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-4 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs">
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Total Products</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{String(summaryStats.total)}</CardTitle>
+            <CardAction><Badge variant="outline"><Package />SKUs</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Total catalog size</div>
+            <div className="text-muted-foreground">Across all categories</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Low Stock</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{String(summaryStats.lowStock)}</CardTitle>
+            <CardAction><Badge variant="outline"><AlertTriangle />{"< 5 units"}</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Products need reordering <AlertTriangle className="size-4" /></div>
+            <div className="text-muted-foreground">Under 5 units remaining</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Out of Stock</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{String(summaryStats.outOfStock)}</CardTitle>
+            <CardAction><Badge variant="outline"><AlertTriangle />Zero qty</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Products unavailable</div>
+            <div className="text-muted-foreground">Restock urgently</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Total Value</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{formatINR(summaryStats.totalValue)}</CardTitle>
+            <CardAction><Badge variant="outline"><TrendingUp />Inventory</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Current inventory worth <TrendingUp className="size-4" /></div>
+            <div className="text-muted-foreground">Based on current prices</div>
+          </CardFooter>
+        </Card>
       </div>
 
       {/* Filters */}

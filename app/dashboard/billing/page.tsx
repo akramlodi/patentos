@@ -1,27 +1,29 @@
 "use client";
 import { useState } from "react";
-import { Plus, Eye, Download, X, Trash2 } from "lucide-react";
-import { sampleInvoices } from "@/lib/data";
+import { Plus, Eye, Download, X, Trash2, ChevronDown, TrendingUp, Clock } from "lucide-react";
+import {
+  Card, CardHeader, CardFooter, CardTitle, CardDescription, CardAction,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useStore, type Invoice, type InvoiceLineItem } from "@/lib/store-context";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatINR, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 
-type Invoice = typeof sampleInvoices[0];
-type InvoiceItem = { name: string; qty: number; price: number };
-
 const tabs = ["All", "Paid", "Pending", "Overdue"] as const;
 
 export default function BillingPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>(sampleInvoices);
+  const { invoices, setInvoices, products } = useStore();
   const [activeTab, setActiveTab] = useState<typeof tabs[number]>("All");
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [customer, setCustomer] = useState("");
-  const [items, setItems] = useState<InvoiceItem[]>([{ name: "", qty: 1, price: 0 }]);
+  const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([{ name: "", qty: 1, price: 0 }]);
 
   const filtered = invoices.filter((inv) => {
     const matchTab = activeTab === "All" || inv.status === activeTab.toLowerCase();
-    const matchSearch = inv.customer.toLowerCase().includes(search.toLowerCase()) ||
+    const matchSearch =
+      inv.customer.toLowerCase().includes(search.toLowerCase()) ||
       inv.id.toLowerCase().includes(search.toLowerCase());
     return matchTab && matchSearch;
   });
@@ -33,34 +35,71 @@ export default function BillingPage() {
     pending: invoices.filter((i) => i.status !== "paid").reduce((s, i) => s + i.amount, 0),
   };
 
-  const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
+  const subtotal = lineItems.reduce((s, i) => s + i.qty * i.price, 0);
   const gst = subtotal * 0.18;
   const grandTotal = subtotal + gst;
 
-  const addItem = () => setItems([...items, { name: "", qty: 1, price: 0 }]);
-  const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
-  const updateItem = (idx: number, field: keyof InvoiceItem, value: string | number) =>
-    setItems(items.map((item, i) => i === idx ? { ...item, [field]: value } : item));
+  const addLine = () =>
+    setLineItems([...lineItems, { name: "", qty: 1, price: 0 }]);
+
+  const removeLine = (idx: number) =>
+    setLineItems(lineItems.filter((_, i) => i !== idx));
+
+  const updateLine = (idx: number, field: keyof InvoiceLineItem, value: string | number) =>
+    setLineItems(lineItems.map((item, i) => (i === idx ? { ...item, [field]: value } : item)));
+
+  const selectProduct = (idx: number, productName: string) => {
+    const product = products.find((p) => p.name === productName);
+    setLineItems(
+      lineItems.map((item, i) =>
+        i === idx
+          ? { ...item, name: productName, price: product?.price ?? item.price }
+          : item
+      )
+    );
+  };
+
+  const resetModal = () => {
+    setCustomer("");
+    setLineItems([{ name: "", qty: 1, price: 0 }]);
+    setIsOpen(false);
+  };
 
   const saveInvoice = () => {
-    if (!customer || items.some((i) => !i.name)) {
-      toast.error("Please fill in all fields");
+    if (!customer.trim()) {
+      toast.error("Customer name is required");
       return;
     }
-    const id = `INV-0${String(invoices.length + 1).padStart(2, "0")}`;
+    if (lineItems.some((i) => !i.name)) {
+      toast.error("Select a product for every line item");
+      return;
+    }
+    const id = `INV-${String(invoices.length + 1).padStart(3, "0")}`;
     const newInv: Invoice = {
       id,
       customer,
-      items: items.map((i) => `${i.name} x${i.qty}`),
-      amount: grandTotal,
+      items: lineItems.map((i) => `${i.name} x${i.qty}`),
+      lineItems,
+      amount: Math.round(grandTotal),
       status: "pending",
       date: new Date().toISOString().split("T")[0],
     };
     setInvoices([newInv, ...invoices]);
-    toast.success(`Invoice ${id} created successfully!`);
-    setIsOpen(false);
-    setCustomer("");
-    setItems([{ name: "", qty: 1, price: 0 }]);
+    toast.success(`Invoice ${id} created!`);
+    resetModal();
+  };
+
+  const handleDownload = async (inv: Invoice) => {
+    const loadingToast = toast.loading(`Generating ${inv.id}...`);
+    try {
+      const { downloadInvoicePDF } = await import("@/lib/pdf");
+      await downloadInvoicePDF(inv);
+      toast.dismiss(loadingToast);
+      toast.success(`${inv.id} downloaded!`);
+    } catch {
+      toast.dismiss(loadingToast);
+      toast.error("Failed to generate PDF");
+    }
   };
 
   return (
@@ -81,21 +120,57 @@ export default function BillingPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: "Total Invoices", value: String(totals.all), color: "text-slate-900" },
-          { label: "Total Billed", value: formatINR(totals.billed), color: "text-slate-900" },
-          { label: "Collected", value: formatINR(totals.paid), color: "text-emerald-600" },
-          { label: "Outstanding", value: formatINR(totals.pending), color: "text-amber-600" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
-            <p className="text-sm text-slate-500 mb-1">{label}</p>
-            <p className={`text-xl font-bold ${color}`}>{value}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-4 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs">
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Total Invoices</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{String(totals.all)}</CardTitle>
+            <CardAction><Badge variant="outline">All time</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Invoice record count</div>
+            <div className="text-muted-foreground">Across all statuses</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Total Billed</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{formatINR(totals.billed)}</CardTitle>
+            <CardAction><Badge variant="outline">Gross</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Total amount invoiced</div>
+            <div className="text-muted-foreground">Includes all invoices</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Collected</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{formatINR(totals.paid)}</CardTitle>
+            <CardAction><Badge variant="outline"><TrendingUp />Paid</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Payments collected <TrendingUp className="size-4" /></div>
+            <div className="text-muted-foreground">From paid invoices</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Outstanding</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{formatINR(totals.pending)}</CardTitle>
+            <CardAction><Badge variant="outline"><Clock />Due</Badge></CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Awaiting collection</div>
+            <div className="text-muted-foreground">Pending + overdue amounts</div>
+          </CardFooter>
+        </Card>
       </div>
 
-      {/* Filters */}
+      {/* Filters + Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="flex items-center gap-4 px-6 py-4 border-b border-slate-100">
           <input
@@ -122,7 +197,6 @@ export default function BillingPage() {
           </div>
         </div>
 
-        {/* Table */}
         <table className="w-full">
           <thead>
             <tr className="text-xs text-slate-500 uppercase tracking-wide bg-slate-50">
@@ -137,9 +211,12 @@ export default function BillingPage() {
                 <td className="px-6 py-3.5 text-sm font-medium text-indigo-600">{inv.id}</td>
                 <td className="px-6 py-3.5 text-sm text-slate-900">{inv.customer}</td>
                 <td className="px-6 py-3.5 text-sm text-slate-500">
-                  {inv.items[0]}{inv.items.length > 1 ? ` +${inv.items.length - 1} more` : ""}
+                  {inv.items[0]}
+                  {inv.items.length > 1 ? ` +${inv.items.length - 1} more` : ""}
                 </td>
-                <td className="px-6 py-3.5 text-sm font-medium text-slate-900">{formatINR(inv.amount)}</td>
+                <td className="px-6 py-3.5 text-sm font-medium text-slate-900">
+                  {formatINR(inv.amount)}
+                </td>
                 <td className="px-6 py-3.5">
                   <StatusBadge status={inv.status as "paid" | "pending" | "overdue"} />
                 </td>
@@ -153,8 +230,9 @@ export default function BillingPage() {
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => toast.success(`Downloading ${inv.id}...`)}
+                      onClick={() => handleDownload(inv)}
                       className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                      title="Download PDF"
                     >
                       <Download className="w-4 h-4" />
                     </button>
@@ -164,7 +242,6 @@ export default function BillingPage() {
             ))}
           </tbody>
         </table>
-
         {filtered.length === 0 && (
           <div className="text-center py-12 text-slate-400">No invoices found</div>
         )}
@@ -173,18 +250,21 @@ export default function BillingPage() {
       {/* Create Invoice Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setIsOpen(false)} />
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50" onClick={resetModal} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <h3 className="text-lg font-semibold text-slate-900">Create Invoice</h3>
-              <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={resetModal} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-5">
+              {/* Customer */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Customer Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Customer Name
+                </label>
                 <input
                   type="text"
                   value={customer}
@@ -194,76 +274,112 @@ export default function BillingPage() {
                 />
               </div>
 
+              {/* Line Items */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Line Items</label>
-                <div className="space-y-2">
-                  {items.map((item, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => updateItem(idx, "name", e.target.value)}
-                        placeholder="Product name"
-                        className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                      />
-                      <input
-                        type="number"
-                        value={item.qty}
-                        onChange={(e) => updateItem(idx, "qty", Number(e.target.value))}
-                        placeholder="Qty"
-                        className="w-16 px-2 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-center"
-                        min={1}
-                      />
-                      <input
-                        type="number"
-                        value={item.price}
-                        onChange={(e) => updateItem(idx, "price", Number(e.target.value))}
-                        placeholder="Price"
-                        className="w-24 px-2 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                        min={0}
-                      />
-                      <span className="text-sm text-slate-500 w-20 text-right shrink-0">
-                        {formatINR(item.qty * item.price)}
-                      </span>
-                      {items.length > 1 && (
-                        <button
-                          onClick={() => removeItem(idx)}
-                          className="text-red-400 hover:text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-slate-700">Line Items</label>
+                  <span className="text-xs text-slate-400">
+                    {products.length} products available
+                  </span>
+                </div>
+
+                {/* Column headers */}
+                <div className="grid grid-cols-[1fr_64px_80px_80px_24px] gap-2 mb-1.5 px-1">
+                  {["Product", "Qty", "Price", "Total", ""].map((h) => (
+                    <span key={h} className="text-xs text-slate-400 font-medium">{h}</span>
                   ))}
                 </div>
+
+                <div className="space-y-2">
+                  {lineItems.map((item, idx) => {
+                    const lineTotal = item.qty * item.price;
+                    return (
+                      <div key={idx} className="grid grid-cols-[1fr_64px_80px_80px_24px] gap-2 items-center">
+                        {/* Product select */}
+                        <div className="relative">
+                          <select
+                            value={item.name}
+                            onChange={(e) => selectProduct(idx, e.target.value)}
+                            className="w-full appearance-none px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-white pr-8 text-slate-800"
+                          >
+                            <option value="">Select product…</option>
+                            {products.map((p) => (
+                              <option key={p.id} value={p.name} disabled={p.qty === 0}>
+                                {p.name}
+                                {p.qty === 0 ? " (Out of stock)" : p.qty < 5 ? ` (${p.qty} left)` : ""}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                        </div>
+
+                        {/* Qty */}
+                        <input
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) => updateLine(idx, "qty", Math.max(1, Number(e.target.value)))}
+                          min={1}
+                          className="px-2 py-2 border border-slate-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        />
+
+                        {/* Price (auto-filled, editable) */}
+                        <input
+                          type="number"
+                          value={item.price}
+                          onChange={(e) => updateLine(idx, "price", Number(e.target.value))}
+                          min={0}
+                          className="px-2 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        />
+
+                        {/* Row total */}
+                        <span className="text-xs font-medium text-slate-600 text-right">
+                          {lineTotal > 0 ? formatINR(lineTotal) : "—"}
+                        </span>
+
+                        {/* Remove */}
+                        {lineItems.length > 1 ? (
+                          <button
+                            onClick={() => removeLine(idx)}
+                            className="text-slate-300 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <span />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
                 <button
-                  onClick={addItem}
-                  className="mt-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                  onClick={addLine}
+                  className="mt-3 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Add Item
+                  <Plus className="w-3.5 h-3.5" /> Add item
                 </button>
               </div>
 
               {/* Totals */}
-              <div className="bg-slate-50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between text-sm text-slate-600">
+              <div className="bg-slate-50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between text-sm text-slate-500">
                   <span>Subtotal</span>
                   <span>{formatINR(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-slate-600">
+                <div className="flex justify-between text-sm text-slate-500">
                   <span>GST (18%)</span>
                   <span>{formatINR(gst)}</span>
                 </div>
                 <div className="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-slate-200">
                   <span>Grand Total</span>
-                  <span>{formatINR(grandTotal)}</span>
+                  <span className="text-indigo-600">{formatINR(grandTotal)}</span>
                 </div>
               </div>
             </div>
 
             <div className="flex gap-3 px-6 pb-6">
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={resetModal}
                 className="flex-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
               >
                 Cancel

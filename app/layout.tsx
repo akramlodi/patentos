@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -37,8 +38,10 @@ export default function RootLayout({
       <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthProvider>
-            {children}
-            <Toaster richColors position="top-right" />
+            <TooltipProvider delayDuration={0}>
+              {children}
+              <Toaster richColors position="top-right" />
+            </TooltipProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

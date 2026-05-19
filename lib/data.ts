@@ -79,6 +79,50 @@ export const samplePatents = [
   },
 ];
 
+export const samplePaymentTrend = [
+  { month: "Jan", collected: 145000, pending: 28000, overdue: 17000 },
+  { month: "Feb", collected: 168000, pending: 32000, overdue: 10000 },
+  { month: "Mar", collected: 142000, pending: 24000, overdue: 14000 },
+  { month: "Apr", collected: 195000, pending: 38000, overdue: 7000 },
+  { month: "May", collected: 178000, pending: 30000, overdue: 12000 },
+  { month: "Jun", collected: 221000, pending: 45000, overdue: 18500 },
+];
+
+export const sampleCategoryRadar = [
+  { category: "Mobile Acc.", revenue: 85, units: 78, profit: 72 },
+  { category: "Computer Acc.", revenue: 62, units: 55, profit: 68 },
+  { category: "Cables", revenue: 45, units: 70, profit: 40 },
+  { category: "Lighting", revenue: 50, units: 88, profit: 55 },
+  { category: "Power", revenue: 40, units: 42, profit: 45 },
+  { category: "Batteries", revenue: 30, units: 65, profit: 35 },
+];
+
+export const sampleKPIRadial = [
+  { name: "Invoice Efficiency", value: 78, fill: "#8B5CF6" },
+  { name: "Customer Retention", value: 91, fill: "#F59E0B" },
+  { name: "Stock Health", value: 72, fill: "#10B981" },
+  { name: "Collection Rate", value: 86.5, fill: "#6366F1" },
+];
+
+export const sampleCustomerRevenue = [
+  { name: "Kumar Traders", revenue: 68900 },
+  { name: "Ravi Electronics", revenue: 45600 },
+  { name: "Priya Stores", revenue: 32400 },
+  { name: "Sunita Medicals", revenue: 18900 },
+  { name: "Meena Fashion", revenue: 14200 },
+  { name: "Deepak Hardware", revenue: 9800 },
+  { name: "Anjali Boutique", revenue: 7200 },
+];
+
+export const sampleMonthlyGrowth = [
+  { month: "Jan", revenue: 190000, target: 180000 },
+  { month: "Feb", revenue: 210000, target: 200000 },
+  { month: "Mar", revenue: 180000, target: 210000 },
+  { month: "Apr", revenue: 240000, target: 220000 },
+  { month: "May", revenue: 220000, target: 230000 },
+  { month: "Jun", revenue: 284500, target: 250000 },
+];
+
 export const sampleAnalytics = {
   weeklyRevenue: [
     { day: "Mon", revenue: 12400 },
